@@ -40,24 +40,24 @@ def randomString(stringLength=10):
     return ''.join(random.choice(letters) for i in range(stringLength))
 
 #parameters
-c_exp=10
+c_exp=12
 max_length = 2**c_exp - 1
-init_message_len=10
+init_message_len=11
 #generate a prime for large field
 print("generating a prime for large field")
 start_time1 = time.time()
-prim = rs.find_prime_polys(c_exp=12, fast_primes=True, single=True)
+prim = rs.find_prime_polys(c_exp=c_exp, fast_primes=True, single=True)
 end_time1= time.time()
 prime_poly_time=end_time1-start_time1
 print("Time Prime polynomial generation", prime_poly_time)
 #initilaize to log and exponenent tables and genrate polynomials
 start_time2 = time.time()
 print("initializing tables")
-rs.init_tables(c_exp=12, prim=prim)
+rs.init_tables(c_exp=c_exp, prim=prim)
 end_time2= time.time()
 start_time3 = time.time()
 print("generating polynomial")
-gen = rs.rs_generator_poly_all(2**c_exp - 1)
+#gen = rs.rs_generator_poly_all(2**c_exp - 1)
 end_time3= time.time()
 
 table_init_time=end_time2-start_time2
@@ -69,15 +69,16 @@ print("size of exp table ", sys.getsizeof(rs.gf_exp))
 print("size of log table is ",sys.getsizeof(rs.gf_log))
 
 
-for msg_len in range(10,max_length/2):
+
+for msg_len in range(10,max_length/3,100):
     msg=randomString(msg_len)
     nsym=msg_len*2 #consider corruption of all bits
     if nsym+msg_len>max_length:
     	nsym=max_length-msg_len
-    enc = rs.rs_encode_msg(msg, nsym, gen=gen[nsym])
     #encode the message
+    gen_one=rs.rs_generator_poly(nsym=nsym)
     start_time4 = time.time()
-    enc = rs.rs_encode_msg(msg, nsym, gen=gen[nsym])
+    enc = rs.rs_encode_msg(msg, nsym, gen=gen_one)
     end_time4 = time.time()
     encoding_time=end_time4-start_time4
 
