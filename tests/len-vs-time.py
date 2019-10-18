@@ -4,7 +4,9 @@ import unittest
 import sys
 import string
 import random
+import pickle
 from random import sample
+from pympler import asizeof
 import itertools
 try:
     from itertools import izip
@@ -40,9 +42,9 @@ def randomString(stringLength=10):
     return ''.join(random.choice(letters) for i in range(stringLength))
 
 #parameters
-c_exp=12
+c_exp=20
 max_length = 2**c_exp - 1
-init_message_len=11
+init_message_len=10
 #generate a prime for large field
 print("generating a prime for large field")
 start_time1 = time.time()
@@ -55,7 +57,13 @@ start_time2 = time.time()
 print("initializing tables")
 rs.init_tables(c_exp=c_exp, prim=prim)
 end_time2= time.time()
+# gf_exp=open('exp.pkl', 'r')
+# gf_log=open('log.pkl', 'r')
+# rs.gf_exp=pickle.load(gf_exp)
+# rs.gf_log=pickle.load(gf_log)
 start_time3 = time.time()
+# gf_exp.close()
+# gf_log.close()
 print("generating polynomial")
 #gen = rs.rs_generator_poly_all(2**c_exp - 1)
 end_time3= time.time()
@@ -64,12 +72,26 @@ table_init_time=end_time2-start_time2
 poly_gen_time=end_time3-start_time3
 print("TIME table initilaization ", table_init_time)
 print("TIME generaring all generator polynomial ", poly_gen_time)
+
+#saving tables
+
+afile = open('exp.pkl', 'w')
+pickle.dump(rs.gf_exp, afile)
+afile.close()
+
+afile = open('log.pkl', 'w')
+pickle.dump(rs.gf_log, afile)
+afile.close()
+
 # need to print size of tables here
-print("size of exp table ", sys.getsizeof(rs.gf_exp))
-print("size of log table is ",sys.getsizeof(rs.gf_log))
+print("size of exp table ", asizeof.asizeof(rs.gf_exp))
+print("size of log table is ",asizeof.asizeof(rs.gf_log))
 
 
-
+msg_len_array=[]
+nsym_len_array=[]
+enc_time_array=[]
+dec_time_array=[]
 for msg_len in range(10,max_length/3,100):
     msg=randomString(msg_len)
     nsym=msg_len*2 #consider corruption of all bits
@@ -96,8 +118,24 @@ for msg_len in range(10,max_length/3,100):
     mesbytarray="".join(chr(i) for i in rmes)
     if msg == mesbytarray:
         print(" msg len= %d errors=%d  enc_timr= %f dec_time= %f" %(msg_len,nsym/2,encoding_time,decoding_time))
+        msg_len_array.append(msg_len)
+        nsym_len_array.append(nsym)
+        enc_time_array.append(encoding_time)
+        dec_time_array.append(decoding_time)
     else:
         print("FAIL")
 
+msg_len_file=open('msg_len_arr.obj', 'w')
+nsym_len_file=open('nsym_len_arr.obj', 'w')
+enc_time_file=open('enc_time_arr.obj', 'w')
+dec_time_file=open('dec_time_arr.obj', 'w')
 
+pickle.dump(msg_len_array, msg_len_file)
+pickle.dump(nsym_len_array, nsym_len_file)
+pickle.dump(enc_time_array, enc_time_file)
+pickle.dump(dec_time_array, dec_time_file)
 
+msg_len_file.close()
+nsym_len_file.close()
+enc_time_file.close()
+dec_time_file.close()
